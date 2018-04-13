@@ -105,7 +105,8 @@ function createNewSoundBoard(){
     titleOfTranscript = allWordsArray[allWordsArray.length-1];
     allWordsArray.splice(allWordsArray.length-1,1);
 
-    if(currentAudioFileBeingPlayed[0].name !== titleOfTranscript){
+    // replace all spaces ' ' and hyphens '-' with '' so that it avoids any confusion.
+    if(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, '') !== titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, '')){
       alert('Audio File Title Does Not Match');
       return;
     }

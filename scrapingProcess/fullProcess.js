@@ -1,7 +1,5 @@
 // STEP 1
-var allWordsArray = [];
 var copyOfAllWordsArray = [];
-var alreadyUsedAllScraping = false;
 
 function getAttributes ( node ) {
 var i,
@@ -55,14 +53,6 @@ return attrs;
       word: word.replace(/\s/g, ""),
       objects: allInstancesArray
     });
-    // allWordsArray will show what was able to be scraped from the first try.
-    if(!alreadyUsedAllScraping){
-      allWordsArray.push({
-        word: word.replace(/\s/g, ""),
-        objects: allInstancesArray
-      });
-      return allInstancesArray;
-    }
     return allInstancesArray;
   }
 
@@ -72,11 +62,6 @@ return attrs;
         getWordObject(allSpans[i].innerHTML)
       }
     }
-      if(!alreadyUsedAllScraping){
-        alreadyUsedAllScraping = true;
-      }
-    // allWordsArray.sort(function(a, b) {
-    //  return a.word.localeCompare(b.word);
   };
 
   getAllWordsTimestamps();
@@ -199,8 +184,7 @@ scrollInterval = setInterval(function(){
           getWordObject(allSpans[i].innerHTML)
         }
       }
-      // allWordsArray.sort(function(a, b) {
-      //  return a.word.localeCompare(b.word);
+
     };
 
     getAllWordsTimestamps();
