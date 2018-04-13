@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>AUDIO SOUNDBOARD</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <textarea style="height:100px;width:200px;" id="text"></textarea>
+    <button onclick="createNewSoundBoard()"></button>
+
+
+    <ul style="display:block;" id="listOfTerms">
+
+    </ul>
+
+    <input type="file" id="file" />
+    <audio id="player" controls>
+      <source src="" id="audio" />
+    </audio>
+    <br>
+    <hr>
+    <div id="transcript-content" style="display:none;">
+
+    </div>
+    <ul id="wordButtons">
+
+    </ul>
+
+    <div id="waveform"></div>
+
+
+
+    <!-- SCRIPTS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="audioHandler.js"></script>
+    <script src="data.js"></script>
+    <script src="makeSoundboard.js"></script>
+
+
+  </body>
+</html>
