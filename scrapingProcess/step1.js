@@ -3,8 +3,6 @@ var allWordsArray = [];
 var copyOfAllWordsArray = [];
 var alreadyUsedAllScraping = false;
 
-
-
 function getAttributes ( node ) {
 var i,
     attributeNodes = node.attributes,
@@ -57,6 +55,7 @@ return attrs;
       word: word.replace(/\s/g, ""),
       objects: allInstancesArray
     });
+    // allWordsArray will show what was able to be scraped from the first try.
     if(!alreadyUsedAllScraping){
       allWordsArray.push({
         word: word.replace(/\s/g, ""),
@@ -81,26 +80,7 @@ return attrs;
   };
 
   getAllWordsTimestamps();
-
-  // function removeDuplicates(originalArray, prop) {
-  //      var newArray = [];
-  //      var lookupObject  = {};
-  //
-  //      for(var i in originalArray) {
-  //         lookupObject[originalArray[i][prop]] = originalArray[i];
-  //      }
-  //
-  //      for(i in lookupObject) {
-  //          newArray.push(lookupObject[i]);
-  //      }
-  //       return newArray;
-  //  }
-  //
-  //  var allWordsArray = removeDuplicates(allWordsArray,'word');
-
-
-
-
+    // Removes duplicates in an array of objects
   function removeDuplicates(originalArray, prop) {
        var newArray = [];
        var lookupObject  = {};
@@ -114,6 +94,23 @@ return attrs;
        }
         return newArray;
    }
+
+   var copyToClipboard = function(textToCopy){
+    $("body")
+        .append($('<input type="text" name="fname" class="textToCopyInput"/>' )
+        .val(textToCopy))
+        .find(".textToCopyInput")
+        .select();
+      try {
+        var successful = document.execCommand('copy');
+        var msg = successful ? 'successful' : 'unsuccessful';
+        alert('Text copied to clipboard!');
+      } catch (err) {
+        window.prompt("To copy the text to clipboard: Ctrl+C, Enter", textToCopy);
+      }
+     $(".textToCopyInput").remove();
+}
+
   var copyOfAllWordsArray = removeDuplicates(copyOfAllWordsArray,'word');
    // var allWordsArray = removeDuplicates(allWordsArray,'word');
    console.log('allWordsArray');

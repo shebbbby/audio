@@ -1,0 +1,1 @@
+copyToClipboard(JSON.stringify(copyOfAllWordsArray));
