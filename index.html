@@ -7,27 +7,39 @@
   </head>
   <body>
     <textarea style="height:100px;width:200px;" id="text"></textarea>
-    <button onclick="createNewSoundBoard()"></button>
-
-
-    <ul style="display:block;" id="listOfTerms">
-
-    </ul>
-
+    <br>
     <input type="file" id="file" />
     <audio id="player" controls>
       <source src="" id="audio" />
     </audio>
     <br>
+    <br>
+
+    <button onclick="createNewSoundBoard()">CREATE SOUNDBOARD</button>
+    <hr>
+
+    <p id="transcript-text">
+
+    </p>
+
+    <!-- <textarea style="height:100px;width:200px;" id="enterCustomSentence"></textarea> -->
+    <!-- <hr> -->
+
+    <!-- <ul style="display:block;" id="listOfTerms">
+
+    </ul> -->
+
+    <br>
     <hr>
     <div id="transcript-content" style="display:none;">
-
     </div>
+
+    <hr>
+    <input type="text" id="playStringTextInput"><button onclick="playStringTextInput()">Play Text</button>
+    <hr>
     <ul id="wordButtons">
 
     </ul>
-
-    <div id="waveform"></div>
 
 
 
