@@ -628,7 +628,7 @@ function getMultipleTimesOfString(string){
 
   for (var i = 0; i < times.length; i++) {
     var currentLiHtmlLength = liHtmlArray.length;
-    buttonHtml.push('<button id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'['+times[i].startsAt +'-'+times[i].endAt+']'+'</button><button> - </button><button> + </button><button onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button>');
+    buttonHtml.push('<button id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'['+times[i].startsAt +'-'+times[i].endAt+']'+'</button><button onclick="reduceChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> - </button><button onclick="increaseChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> + </button><button onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button>');
   }
   console.log(buttonHtml);
   liHtmlArray.push(buttonHtml);
@@ -714,13 +714,14 @@ function removeWithinCustomUlButtons(i,y){
     for (var z = y+1; z < liHtmlArray[i].length; z++) {
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('playCustomChunk-'+i+'-'+z+'','playCustomChunk-'+i+'-'+(z-1));
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('removeWithinCustomUlButtons('+i+','+z+')', 'removeWithinCustomUlButtons('+i+','+(z-1)+')');
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('reduceChunkOfAudioBy10Miliseconds('+i+','+z+')', 'reduceChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('increaseChunkOfAudioBy10Miliseconds('+i+','+z+')', 'increaseChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
     }
   }
   liHtmlArray[i].splice(y,1);
   if(liHtmlArray[i].length === 0){
     liHtmlArray.splice(i,1);
   }
-  var newHtmlArray = JSON.parse(JSON.stringify(liHtmlArray));
   createCustomButtons();
 }
 
