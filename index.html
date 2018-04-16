@@ -37,9 +37,32 @@
     <hr>
     <input type="text" id="playStringTextInput"><button onclick="playStringTextInput()">Play Text</button>
     <hr>
-    <ul id="wordButtons">
+
+
+    <hr>
+    <textarea id="customWordButtonsTextarea" name="" id="" cols="30" rows="10">
+
+    </textarea>
+    <button onclick="createCustomButtons();">Find All Words</button>
+    <ul id="customWordButtons">
 
     </ul>
+    <hr>
+
+    <button onclick="displayAllWordButtons()">Display All Word Buttons</button>
+    <ul id="wordButtons" style="display:none;">
+
+    </ul>
+
+    <script>
+      function displayAllWordButtons(){
+        if(document.querySelector('#wordButtons').style.display === 'block'){
+          document.querySelector('#wordButtons').style.display = 'none';
+        }else{
+          document.querySelector('#wordButtons').style.display = 'block';
+        }
+      }
+    </script>
 
 
 

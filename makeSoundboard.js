@@ -5,11 +5,12 @@ function getCurrentTimePlayingInAudio(){
 // NEED TO START AS null TO CLEAR INTERVAL IN FUTURE
 var singleWordInterval = null;
 
-
 function playSingleWord(wordObject){
   clearInterval(singleWordInterval);
   var startTime = wordObject.startsAt;
   var endTime = wordObject.endAt;
+
+  // CAN SET OFFSET AMOUNT BEFORE entTime to make better timing
 
   console.log(startTime, endTime);
 
@@ -35,7 +36,8 @@ function playSingleWordWithString(wordString){
 }
 
 
-function playChunkOfAudio(beginning,end,file){
+// playChunkOfAudio(5,10, function(){playChunkOfAudio(15,20)})
+function playChunkOfAudio(beginning,end,callback){
   clearInterval(singleWordInterval);
   document.querySelector('audio').currentTime = beginning;
   document.querySelector('audio').play();
@@ -46,9 +48,34 @@ function playChunkOfAudio(beginning,end,file){
     if(end < document.querySelector('audio').currentTime){
       document.querySelector('audio').pause();
       clearInterval(singleWordInterval);
+      if(callback){
+        callback();
+      }
     }
   },0.1);
 }
+
+// ------------------------------------------------------------------------------
+audioLinkArray = [];
+function addToAudioLinkArray(beginning,end){
+  stringToAdd = 'playChunkOfAudio('+beginning+','+end+',function(){console.log("FINISHED")})';
+  audioLinkArray.push(stringToAdd);
+}
+
+
+function linkAudioLinkArray(){
+  // CREATE CLONE OF AUDIOLINKARRAY
+  var audioLinkArray2 = JSON.parse(JSON.stringify(audioLinkArray));
+  for (var i = 0; i < audioLinkArray.length; i++) {
+    if (audioLinkArray2[i + 1]) {
+      audioLinkArray2[i] = audioLinkArray2[i].replace('console.log("FINISHED")',audioLinkArray2[i+1]);
+      audioLinkArray2.splice(i+1,1);
+      i -= 1;
+    }
+  }
+  return audioLinkArray2.join('');
+}
+// ------------------------------------------------------------------------------
 
 function getObjectsOfWordIfExists(word){
   var arrayOfWord
@@ -327,22 +354,6 @@ function getAllSubArraysForChunkedTranscript(array){
   return subArrays;
 }
 
-function getAllSubArraysForChunked10Array(){
-  return getAllSubArraysForChunkedTranscript(chunk(rawTranscriptArray,10));
-}
-
-function searchInMultiSubArray(array,string){
-  for (var i = 0; i < array.length; i++) {
-    for (var y = 0; y < array[i].length; y++) {
-      if (string.toLowerCase() === array[i][y].join(' ').toLowerCase()) {
-        console.log('TRUE')
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
 function getAllWordObjectsInAlphabeticOrder(){
   var arrayOfAllIndividualObjects = [];
   var transcriptTextHTML = '';
@@ -366,22 +377,42 @@ function getAllWordObjectsInAlphabeticOrder(){
   return arrayOfAllIndividualObjects;
 }
 
+// splice a string;
+function spliceSlice(str, index, count, add) {
+  // We cannot pass negative indexes dirrectly to the 2nd slicing operation.
+  if (index < 0) {
+    index = str.length + index;
+    if (index < 0) {
+      index = 0;
+    }
+  }
+
+  return str.slice(0, index) + (add || "") + str.slice(index + count);
+}
+
 
 function searchInMultiSubArray(array,string){
   var resultsArray = [];
   for (var i = 0; i < array.length; i++) {
     for (var y = 0; y < array[i].length; y++) {
-      if (string.toLowerCase().replace(/'/g, '').replace('.', '') === array[i][y].join(' ').toLowerCase().replace(/'/g, '').replace('.', '')) {
+
+      // IF STARTS WITH OR ENDS WITH SPACE--------------
+      if(string[0] === ' '){
+        string = spliceSlice(string,0,1);
+      }
+      if(string[string.length-1] === ' '){
+        string = spliceSlice(string,string.length-1,1);
+      }
+      // -----------------------------------------------
+      var stringValue = string.toLowerCase().replace(/'/g, '').replace('.', '');
+      var compareValue = array[i][y].join(' ').toLowerCase().replace(/'/g, '').replace('.', '')
+
+      if (stringValue === compareValue) {
         resultsArray.push({iVal:i,yVal:y});
       }
     }
   }
   return resultsArray;
-}
-
-function getFullChunkedObjectArray(){
-  var xxx = getAllWordObjectsInAlphabeticOrder()
-  getAllSubArraysForChunkedTranscript(chunk(xxx,10));
 }
 
 
@@ -396,8 +427,16 @@ function searchInTranscriptChunkedInOrderAsStrings(string){
   }
 }
 
-
-
+// ----------------------------------------------------------------
+function searchInSpecificTranscript(string, transcriptObject){
+  var results = searchInMultiSubArray(transcriptObject,string);
+  if(results.length > 0){
+    return results;
+  }else{
+    return false;
+  }
+}
+// ----------------------------------------------------------------
 
 function getTimesOfString(string){
   var times = searchInTranscriptChunkedInOrderAsStrings(string);
@@ -416,9 +455,283 @@ function getTimesOfString(string){
   }
   return arrayOfTimesToReturn;
 }
+// ----------------------------------------------------------------
+function getTimesOfStringSpecificTranscript(string,transcriptObject){
+  var times = searchInSpecificTranscript(string,transcriptObject.transcriptChunkedInOrderAsStrings);
+  var arrayOfTimesToReturn = [];
+  if(times){
+    for (var i = 0; i < times.length; i++) {
+      var arrayOfWordObjects = transcriptObject.transcriptChunkedInOrderAsObjects[times[i].iVal][times[i].yVal];
+      var length = arrayOfWordObjects.length;
+      var startsAt = arrayOfWordObjects[0].startsAt;
+      var endsAt = arrayOfWordObjects[length-1].endAt;
+      arrayOfTimesToReturn.push({
+        startsAt: startsAt,
+        endAt:endsAt
+      });
+    }
+  }
+  return arrayOfTimesToReturn;
+}
+// ----------------------------------------------------------------
+
+
+function getTimesOfStringAdvanced(string, originalString){
+  // SPLIT STRING INTO ARRAY
+    var stringArray = string.split(' ');
+  // GET ARRAY OF TIMES OF STRING PARAMETER
+    var times = getTimesOfString(string);
+  // IF TIMES ARRAY IS EMPTY AND STRINGARRAY IS EMPTY
+    if (times.length === 0 && stringArray.length > 0 && stringArray[0] !== '') {
+      console.log('stringArray');
+      console.log(stringArray);
+  // SPLICE THE LAST WORD IN STRINGARRAY
+      stringArray.splice(stringArray.length-1,1);
+  // JOIN THE RECENTLY SPLICED ARRAY INTO A STRING
+      var string = stringArray.join(' ');
+  // RECURSIVE... CHECK THE STRING AGAIN WITHOUT THE LAST WORD
+      return getTimesOfStringAdvanced(string, originalString);
+    }
+  // IF THE STRING IS FOUND IN ANY ITERATION, THE FUNCTION IS RETURNED
+    else{
+      var objectToReturn = {
+        originalString: originalString,
+        stringFound: string,
+        times: times
+      }
+      if(string === ''){
+        var originalStringArray = originalString.split(' ');
+        originalStringArray.splice(0,1);
+        var newString = originalStringArray.join(' ');
+        return getTimesOfStringAdvanced(newString, newString);
+      }
+      return objectToReturn;
+    }
+}
+// ----------------------------------------------------------------
+function getTimesOfStringAdvancedSpecificTranscript(string, originalString, transcript){
+  // SPLIT STRING INTO ARRAY
+    var stringArray = string.split(' ');
+  // GET ARRAY OF TIMES OF STRING PARAMETER
+    var times = getTimesOfStringSpecificTranscript(string,transcript);
+  // IF TIMES ARRAY IS EMPTY AND STRINGARRAY IS EMPTY
+    if (times.length === 0 && stringArray.length > 0 && stringArray[0] !== '') {
+      console.log('stringArray');
+      console.log(stringArray);
+  // SPLICE THE LAST WORD IN STRINGARRAY
+      stringArray.splice(stringArray.length-1,1);
+  // JOIN THE RECENTLY SPLICED ARRAY INTO A STRING
+      var string = stringArray.join(' ');
+  // RECURSIVE... CHECK THE STRING AGAIN WITHOUT THE LAST WORD
+      return getTimesOfStringAdvancedSpecificTranscript(string, originalString,transcript);
+    }
+  // IF THE STRING IS FOUND IN ANY ITERATION, THE FUNCTION IS RETURNED
+    else{
+      var objectToReturn = {
+        originalString: originalString,
+        stringFound: string,
+        times: times,
+        transcriptName: transcript.audioFile[0].name,
+        audioFile: transcript.audioFile
+      }
+      if(string === ''){
+        var originalStringArray = originalString.split(' ');
+        originalStringArray.splice(0,1);
+        var newString = originalStringArray.join(' ');
+        return getTimesOfStringAdvancedSpecificTranscript(newString, newString,transcript);
+      }
+      return objectToReturn;
+    }
+}
+// ----------------------------------------------------------------
+
+
+function getTimesOfStringEvenMoreAdvanced(string){
+  var stringArray = string.split(' ');
+  if(!searchInTranscriptChunkedInOrderAsStrings(stringArray[0])){
+    if (stringArray.length <= 1) {
+      return;
+    }
+    stringArray.splice(0,1);
+    string = stringArray.join(' ');
+    return getTimesOfStringEvenMoreAdvanced(string);
+  }
+  if(!searchInTranscriptChunkedInOrderAsStrings(stringArray[stringArray.length-1])){
+    if (stringArray.length <= 1) {
+      return;
+    }
+    stringArray.splice(stringArray.length-1,1);
+    string = stringArray.join(' ');
+    return getTimesOfStringEvenMoreAdvanced(string);
+  }
+  if (string[0] === ' ') {
+    string = spliceSlice(string,0,1);
+  }
+  if (string[string.length-1] === ' ') {
+    string = spliceSlice(string,string.length-1,1);
+  }
+  var initialTimesFound = getTimesOfStringAdvanced(string,string);
+  return initialTimesFound;
+}
+// ----------------------------------------------------------------
+function getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript){
+  var stringArray = string.split(' ');
+  console.log(transcript.transcriptChunkedInOrderAsStrings);
+  if(!searchInSpecificTranscript(stringArray[0],transcript.transcriptChunkedInOrderAsStrings)){
+    if (stringArray.length <= 1) {
+      return;
+    }
+    stringArray.splice(0,1);
+    string = stringArray.join(' ');
+    return getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript);
+  }
+  if(!searchInSpecificTranscript(stringArray[stringArray.length-1],transcript.transcriptChunkedInOrderAsStrings)){
+    if (stringArray.length <= 1) {
+      return;
+    }
+    stringArray.splice(stringArray.length-1,1);
+    string = stringArray.join(' ');
+    return getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript);
+  }
+  if (string[0] === ' ') {
+    string = spliceSlice(string,0,1);
+  }
+  if (string[string.length-1] === ' ') {
+    string = spliceSlice(string,string.length-1,1);
+  }
+  var initialTimesFound = getTimesOfStringAdvancedSpecificTranscript(string,string,transcript);
+  return initialTimesFound;
+}
+// ----------------------------------------------------------------
+
+
+var liHtmlArray = [];
+var multipleTimesIncrementer = 0;
+
+function getMultipleTimesOfString(string){
+  if(string === ''){
+    return;
+  }
+  if (multipleTimesIncrementer === 0) {
+    arrayOfTimeObjects = [];
+  }
+  multipleTimesIncrementer++;
+  var object = getTimesOfStringEvenMoreAdvanced(string);
+  arrayOfTimeObjects.push(object);
+  var originalString = object.originalString;
+  var stringFound = object.stringFound;
+  var times = object.times;
+
+  var buttonHtml = '';
+  var buttonHtml = [];
+
+
+  for (var i = 0; i < times.length; i++) {
+    var currentLiHtmlLength = liHtmlArray.length;
+    buttonHtml.push('<button id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'['+times[i].startsAt +'-'+times[i].endAt+']'+'</button><button> - </button><button> + </button><button onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button>');
+  }
+  console.log(buttonHtml);
+  liHtmlArray.push(buttonHtml);
+
+  var newStringToSearch = originalString.replace(stringFound,'');
+  if(newStringToSearch[0] === ' '){
+    newStringToSearch = spliceSlice(newStringToSearch,0,1);
+  }
+  if(newStringToSearch.length >= 1){
+    return getMultipleTimesOfString(newStringToSearch);
+  }
+  multipleTimesIncrementer = 0;
+  return arrayOfTimeObjects;
+}
+
+
+// ----------------------------------------------------------------
+// function getMultipleTimesOfStringSpecificTranscript(string,transcript){
+//   if(string === ''){
+//     return;
+//   }
+//   if (multipleTimesIncrementer === 0) {
+//     arrayOfTimeObjects = [];
+//   }
+//   multipleTimesIncrementer++;
+//   var object = getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript);
+//   arrayOfTimeObjects.push(object);
+//   var originalString = object.originalString;
+//   var stringFound = object.stringFound;
+//   var times = object.times;
+//   var fileName = transcript.audioFile[0].name
+//
+//   var buttonHtml = [];
+//
+//   for (var i = 0; i < times.length; i++) {
+//     buttonHtml.push('<button onclick="playChunkOfAudioWithSpecificAudioFileName('+times[i].startsAt + ',' + times[i].endAt+ ','+'"'+fileName+'"'+')">'+stringFound+'['+times[i].startsAt +'-'+times[i].endAt+']'+'</button><button> - </button><button> + </button><button> X </button>');
+//   }
+//   console.log(buttonHtml);
+//   liHtmlArray.push('<li>'+buttonHtml.join('')+'</li>');
+//
+//   var newStringToSearch = originalString.replace(stringFound,'');
+//   if(newStringToSearch[0] === ' '){
+//     newStringToSearch = spliceSlice(newStringToSearch,0,1);
+//   }
+//   if(newStringToSearch.length >= 1){
+//     return getMultipleTimesOfStringSpecificTranscript(newStringToSearch,transcript);
+//   }
+//   multipleTimesIncrementer = 0;
+//   return arrayOfTimeObjects;
+// }
+
+
+
+// ----------------------------------------------------------------
+
+function getMultipleTimesOfStringFromAllAudioFiles(string){
+  var arrayOfAllResults = [];
+  for (var i = 0; i < allTranscriptObjects.length; i++) {
+    arrayOfAllResults.push(getMultipleTimesOfStringSpecificTranscript(string,allTranscriptObjects[i]));
+  }
+  return arrayOfAllResults;
+}
+// ----------------------------------------------------------------
+
+
+function createCustomButtons(){
+  getMultipleTimesOfString(document.querySelector('#customWordButtonsTextarea').value);
+
+  document.querySelector('#customWordButtonsTextarea').value = '';
+  var innerUlHtml = '';
+  for (var i = 0; i < liHtmlArray.length; i++) {
+    innerUlHtml += '<li>'
+    for (var y = 0; y < liHtmlArray[i].length; y++) {
+      innerUlHtml += liHtmlArray[i][y];
+    }
+    innerUlHtml += '</li>'
+  }
+  document.querySelector('#customWordButtons').innerHTML = innerUlHtml;
+}
+
+function removeWithinCustomUlButtons(i,y){
+  if(liHtmlArray[i][y+1]){
+    for (var z = y+1; z < liHtmlArray[i].length; z++) {
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('playCustomChunk-'+i+'-'+z+'','playCustomChunk-'+i+'-'+(z-1));
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('removeWithinCustomUlButtons('+i+','+z+')', 'removeWithinCustomUlButtons('+i+','+(z-1)+')');
+    }
+  }
+  liHtmlArray[i].splice(y,1);
+  if(liHtmlArray[i].length === 0){
+    liHtmlArray.splice(i,1);
+  }
+  var newHtmlArray = JSON.parse(JSON.stringify(liHtmlArray));
+  createCustomButtons();
+}
+
+document.querySelector('#customWordButtonsTextarea').value = '';
+
+
+
+
 
 function playString(string){
-  var times = getTimesOfString(string);
+  var times = getTimesOfStringEvenMoreAdvanced(string).times;
   console.log(times)
 
   if(times.length > 0){
@@ -433,6 +746,44 @@ function playString(string){
     console.log(string+' not found');
   }
 }
+
+function playStringFromAudioFile(string,transcript){
+  var times = getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript).times;
+  console.log(times);
+
+  if(times.length > 0){
+    var randomNumber = Math.floor(Math.random() * times.length);
+    console.log(randomNumber)
+    if(times[randomNumber] && times[randomNumber].startsAt && times[randomNumber].endAt){
+        playAudioFile(transcript.audioFile);
+        playChunkOfAudio(times[randomNumber].startsAt,times[randomNumber].endAt);
+    }else{
+      console.log(times[randomNumber])
+    }
+  }else{
+    console.log(string+' not found');
+  }
+}
+
+function playChunkOfAudioWithSpecificAudioFileName(beginning,end,fileName){
+  clearInterval(singleWordInterval);
+  playAudioFileWithFileName(fileName);
+  document.querySelector('audio').currentTime = beginning;
+  document.querySelector('audio').play();
+
+  singleWordInterval = setInterval(function(){
+    // console.log(end);
+    // console.log(document.querySelector('audio').currentTime);
+    if(end < document.querySelector('audio').currentTime){
+      document.querySelector('audio').pause();
+      clearInterval(singleWordInterval);
+    }
+  },0.1);
+}
+
+
+
+
 
 function playStringTextInput(){
   playString(document.querySelector('#playStringTextInput').value);
@@ -462,7 +813,7 @@ function arraysAreEqual(ary1,ary2){
 
 
 
-
+var allTranscriptObjects = [];
 function getArrayOfTimeStamps(fullTranscript, endOfAudio){
   // Replace all line breaks with '!!!!' so that you can easily split into an array.
   var arrayOfLines = fullTranscript.replace( /\n/g, "!!!!" ).split( "!!!!" );
@@ -581,9 +932,16 @@ function createNewSoundBoard(){
 
     transcriptChunkedInOrderAsStrings = getAllSubArraysForChunkedTranscript(advancedObjectSpliceSTRING());
     transcriptChunkedInOrderAsObjects = getAllSubArraysForChunkedTranscript(advancedObjectSplice());
+    currentObjectToPushToDatabase.transcriptChunkedInOrderAsStrings = transcriptChunkedInOrderAsStrings;
+    currentObjectToPushToDatabase.transcriptChunkedInOrderAsObjects = transcriptChunkedInOrderAsObjects;
 
 
 
+    allTranscriptObjects.push({
+      transcriptChunkedInOrderAsStrings: transcriptChunkedInOrderAsStrings,
+      transcriptChunkedInOrderAsObjects: transcriptChunkedInOrderAsObjects,
+      audioFile: currentAudioFileBeingPlayed
+    });
   }else if(
     !(document.getElementById('text').value[0] === '['
   && document.getElementById('text').value[1] === '{')){

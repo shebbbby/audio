@@ -26,8 +26,9 @@ var currentAudioFileBeingPlayed;
 
 
     function playAudioFileWithFileName(fileName){
+
       for (var i = 0; i < audioFiles.length; i++) {
-        if(audioFiles[i][0].name === fileName){
+        if(audioFiles && audioFiles[i] &&  audioFiles[i][0] && audioFiles[i][0].name === fileName){
           var file = audioFiles[i];
         }
       }
