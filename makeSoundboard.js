@@ -628,7 +628,7 @@ function getMultipleTimesOfString(string){
 
   for (var i = 0; i < times.length; i++) {
     var currentLiHtmlLength = liHtmlArray.length;
-    buttonHtml.push('<button id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'['+times[i].startsAt +'-'+times[i].endAt+']'+'</button><button onclick="reduceChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> - </button><button onclick="increaseChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> + </button><button onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button>');
+    buttonHtml.push('<span id="playCustomChunkSpan-'+currentLiHtmlLength+'-'+i+'"><button class="playChunk" id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'[<span class="timeChunk">'+times[i].startsAt +'-'+times[i].endAt+'</span>]'+'</button><button class="reduceChunk" onclick="reduceChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> - </button><button class="increaseChunk" onclick="increaseChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> + </button><button class="deleteChunk" onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button><button class="addToAudioLinkButton" onclick="addToAudioLinkArray('+times[i].startsAt + ',' + times[i].endAt+')">ADD</button></span>');
   }
   console.log(buttonHtml);
   liHtmlArray.push(buttonHtml);
@@ -709,10 +709,13 @@ function createCustomButtons(){
   document.querySelector('#customWordButtons').innerHTML = innerUlHtml;
 }
 
+
+
 function removeWithinCustomUlButtons(i,y){
   if(liHtmlArray[i][y+1]){
     for (var z = y+1; z < liHtmlArray[i].length; z++) {
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('playCustomChunk-'+i+'-'+z+'','playCustomChunk-'+i+'-'+(z-1));
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('playCustomChunkSpan-'+i+'-'+z+'','playCustomChunkSpan-'+i+'-'+(z-1));
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('removeWithinCustomUlButtons('+i+','+z+')', 'removeWithinCustomUlButtons('+i+','+(z-1)+')');
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('reduceChunkOfAudioBy10Miliseconds('+i+','+z+')', 'reduceChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('increaseChunkOfAudioBy10Miliseconds('+i+','+z+')', 'increaseChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
@@ -723,6 +726,35 @@ function removeWithinCustomUlButtons(i,y){
     liHtmlArray.splice(i,1);
   }
   createCustomButtons();
+}
+
+function reduceChunkOfAudioBy10Miliseconds(i,y){
+  var times = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML.split('-');
+
+  times[0] = Number(times[0]);
+  times[1] = Number(times[1]);
+
+  times[1] -= 0.01;
+
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML = times[0].toFixed(2) + '-' + times[1].toFixed(2);
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).onclick = function(){playChunkOfAudio(times[0],times[1])}
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkArray(times[0],times[1]); }
+
+
+  addToAudioLinkArray
+}
+function increaseChunkOfAudioBy10Miliseconds(i,y){
+  var times = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML.split('-');
+
+  times[0] = Number(times[0]);
+  times[1] = Number(times[1]);
+
+  times[1] += 0.01;
+
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML = times[0].toFixed(2) + '-' + times[1].toFixed(2);
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).onclick = function(){playChunkOfAudio(times[0],times[1])}
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkArray(times[0],times[1]); }
+
 }
 
 document.querySelector('#customWordButtonsTextarea').value = '';
