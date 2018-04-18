@@ -36,10 +36,13 @@ function playSingleWordWithString(wordString){
 }
 
 
-// playChunkOfAudio(5,10, function(){playChunkOfAudio(15,20)})
-function playChunkOfAudio(beginning,end,callback){
+// To play two next to each other: playChunkOfAudio(5,10,1, function(){playChunkOfAudio(15,20)})
+function playChunkOfAudio(beginning,end,playbackRate,callback){
   clearInterval(singleWordInterval);
   document.querySelector('audio').currentTime = beginning;
+  if(playbackRate){
+    document.querySelector('audio').playbackRate = playbackRate;
+  }
   document.querySelector('audio').play();
 
   singleWordInterval = setInterval(function(){
@@ -47,6 +50,8 @@ function playChunkOfAudio(beginning,end,callback){
     // console.log(document.querySelector('audio').currentTime);
     if(end < document.querySelector('audio').currentTime){
       document.querySelector('audio').pause();
+      // RESET PLAYBACK RATE TO NORMAL
+      document.querySelector('audio').playbackRate = 1;
       clearInterval(singleWordInterval);
       if(callback){
         callback();
@@ -57,9 +62,37 @@ function playChunkOfAudio(beginning,end,callback){
 
 // ------------------------------------------------------------------------------
 audioLinkArray = [];
-function addToAudioLinkArray(beginning,end){
-  stringToAdd = 'playChunkOfAudio('+beginning+','+end+',function(){console.log("FINISHED")})';
+audioLinkArrayObjects = [];
+
+
+function addToAudioLinkArray(beginning,end, playbackRate){
+  if (playbackRate) {
+    var playback = ','+ playbackRate;
+  }else{
+    var playback = '';
+  }
+  stringToAdd = 'playChunkOfAudio('+beginning+','+end + playback + ',function(){console.log("FINISHED")})';
+  console.log(stringToAdd);
   audioLinkArray.push(stringToAdd);
+
+  return stringToAdd;
+}
+
+
+function addToAudioLinkAndChangeHtml(beginning,end, playbackRate,string){
+  var stringFunction = addToAudioLinkArray(beginning,end, playbackRate);
+  audioLinkArrayObjects.push({
+    beginning: beginning,
+    end:end,
+    playbackRate:playbackRate,
+    stringFunction: stringFunction,
+    string:string
+  });
+  var innerHTMLText = '';
+  for(var i = 0; i < audioLinkArrayObjects.length; i++){
+    innerHTMLText += '<span style="cursor:pointer;" onclick='+audioLinkArrayObjects[i].stringFunction+'>' + audioLinkArrayObjects[i].string + ' </span>';
+  }
+  document.querySelector('#audio-link-content').innerHTML = innerHTMLText;
 }
 
 
@@ -75,6 +108,35 @@ function linkAudioLinkArray(){
   }
   return audioLinkArray2.join('');
 }
+
+
+function getRandomAudioLinkFromCurrentFound(){
+  audioLinkArray = [];
+  randomAudioLinkTimesArray = [];
+  for (var i = 0; i < liHtmlArray.length; i++) {
+    var randomNumber = Math.floor(Math.random() * liHtmlArray[i].length);
+    var buttonArrayToRandomlySelect = document.querySelector('#playCustomChunk-'+i+'-'+randomNumber);
+    var buttonAsString = document.getHTML(buttonArrayToRandomlySelect,true)
+    randomAudioLinkTimesArray.push(buttonArrayToRandomlySelect);
+    document.querySelectorAll('.stringFound')[i].innerHTML = buttonAsString;
+    document.querySelectorAll('.stringFound > button')[i].style.color = 'green';
+    var times = randomAudioLinkTimesArray[i].querySelector('.timeChunk').innerHTML.split('-');
+    }
+  return randomAudioLinkTimesArray;
+}
+
+function playAudioLinkString(){
+  if (audioLinkArray.length > 0) {
+    eval(linkAudioLinkArray());
+  }
+}
+
+function emptyAudioLinkString(){
+  audioLinkArray = [];
+  audioLinkArrayObjects = [];
+  document.querySelector('#audio-link-content').innerHTML = '';
+}
+
 // ------------------------------------------------------------------------------
 
 function getObjectsOfWordIfExists(word){
@@ -163,37 +225,6 @@ function getMultipleRandomTimingOfWord(string){
 }
 
 
-// function combineWords(array){
-//   for (var i = 0; i < array.length-1; i++) {
-//     if(array[i].endAt > array[i+1].startsAt && array[i+1].startsAt > array[i].startsAt){
-//       array[i] = {word: array[i].word, startsAt: array[i].startsAt, endAt: array[i+1].endAt, word2:array[i+1].word}
-//     }
-//     else if(array[i-1] && array[i-1].word2 && array[i-1].word2 === array[i].word){
-//       array.splice(i,1);
-//       i -=1;
-//     }
-//   }
-// }
-
-
-// Get array of every index of substring within string
-function getIndicesOf(searchStr, str, caseSensitive) {
-    var searchStrLen = searchStr.length;
-    if (searchStrLen == 0) {
-        return [];
-    }
-    var startIndex = 0, index, indices = [];
-    if (!caseSensitive) {
-        str = str.toLowerCase();
-        searchStr = searchStr.toLowerCase();
-    }
-    while ((index = str.indexOf(searchStr, startIndex)) > -1) {
-        indices.push(index);
-        startIndex = index + searchStrLen;
-    }
-    return indices;
-}
-
 function checkIfStringIsSubstringOfRawTranscript(string){
   if(rawTranscript.indexOf(string) !== -1){
     var indices = getIndicesOf(string, rawTranscript);
@@ -242,41 +273,6 @@ function makeAllUlWordButtons(){
 
 // ----------------------------------------------------
 
-function chunk (arr, len) {
-
-  var chunks = [],
-      i = 0,
-      n = arr.length;
-
-  while (i < n) {
-    chunks.push(arr.slice(i, i += len));
-  }
-
-  return chunks;
-}
-
-//  So if the string was 'abc' you could have [a, ab, abc, b, ba, bac etc...]
-function getAllSubstrings(str) {
-  var i, j, result = [];
-
-  for (i = 0; i < str.length; i++) {
-      for (j = i + 1; j < str.length + 1; j++) {
-          result.push(str.slice(i, j));
-      }
-  }
-  return result;
-}
-
-function getAllSubArrays(array) {
-  var i, j, result = [];
-
-  for (i = 0; i < array.length; i++) {
-      for (j = i + 1; j < array.length + 1; j++) {
-          result.push(array.slice(i, j));
-      }
-  }
-  return result;
-}
 
 function getAllSubArraysForAllParagraphs(){
   var subArrays = [];
@@ -377,19 +373,6 @@ function getAllWordObjectsInAlphabeticOrder(){
   return arrayOfAllIndividualObjects;
 }
 
-// splice a string;
-function spliceSlice(str, index, count, add) {
-  // We cannot pass negative indexes dirrectly to the 2nd slicing operation.
-  if (index < 0) {
-    index = str.length + index;
-    if (index < 0) {
-      index = 0;
-    }
-  }
-
-  return str.slice(0, index) + (add || "") + str.slice(index + count);
-}
-
 
 function searchInMultiSubArray(array,string){
   var resultsArray = [];
@@ -428,14 +411,7 @@ function searchInTranscriptChunkedInOrderAsStrings(string){
 }
 
 // ----------------------------------------------------------------
-function searchInSpecificTranscript(string, transcriptObject){
-  var results = searchInMultiSubArray(transcriptObject,string);
-  if(results.length > 0){
-    return results;
-  }else{
-    return false;
-  }
-}
+
 // ----------------------------------------------------------------
 
 function getTimesOfString(string){
@@ -456,26 +432,9 @@ function getTimesOfString(string){
   return arrayOfTimesToReturn;
 }
 // ----------------------------------------------------------------
-function getTimesOfStringSpecificTranscript(string,transcriptObject){
-  var times = searchInSpecificTranscript(string,transcriptObject.transcriptChunkedInOrderAsStrings);
-  var arrayOfTimesToReturn = [];
-  if(times){
-    for (var i = 0; i < times.length; i++) {
-      var arrayOfWordObjects = transcriptObject.transcriptChunkedInOrderAsObjects[times[i].iVal][times[i].yVal];
-      var length = arrayOfWordObjects.length;
-      var startsAt = arrayOfWordObjects[0].startsAt;
-      var endsAt = arrayOfWordObjects[length-1].endAt;
-      arrayOfTimesToReturn.push({
-        startsAt: startsAt,
-        endAt:endsAt
-      });
-    }
-  }
-  return arrayOfTimesToReturn;
-}
 // ----------------------------------------------------------------
-
-
+var wordsSearched = [];
+var stringsFoundArray = [];
 function getTimesOfStringAdvanced(string, originalString){
   // SPLIT STRING INTO ARRAY
     var stringArray = string.split(' ');
@@ -499,6 +458,8 @@ function getTimesOfStringAdvanced(string, originalString){
         stringFound: string,
         times: times
       }
+      wordsSearched.push('<span style="display:inline-block;" class="tooltip"><span class="stringFound"><button style="cursor:pointer;color:green;">'+string+'</button></span> <span class="tooltiptext" id="tooltip-forWord-'+liHtmlArray.length+'"></span></span>')
+      stringsFoundArray.push(string);
       if(string === ''){
         var originalStringArray = originalString.split(' ');
         originalStringArray.splice(0,1);
@@ -508,47 +469,15 @@ function getTimesOfStringAdvanced(string, originalString){
       return objectToReturn;
     }
 }
-// ----------------------------------------------------------------
-function getTimesOfStringAdvancedSpecificTranscript(string, originalString, transcript){
-  // SPLIT STRING INTO ARRAY
-    var stringArray = string.split(' ');
-  // GET ARRAY OF TIMES OF STRING PARAMETER
-    var times = getTimesOfStringSpecificTranscript(string,transcript);
-  // IF TIMES ARRAY IS EMPTY AND STRINGARRAY IS EMPTY
-    if (times.length === 0 && stringArray.length > 0 && stringArray[0] !== '') {
-      console.log('stringArray');
-      console.log(stringArray);
-  // SPLICE THE LAST WORD IN STRINGARRAY
-      stringArray.splice(stringArray.length-1,1);
-  // JOIN THE RECENTLY SPLICED ARRAY INTO A STRING
-      var string = stringArray.join(' ');
-  // RECURSIVE... CHECK THE STRING AGAIN WITHOUT THE LAST WORD
-      return getTimesOfStringAdvancedSpecificTranscript(string, originalString,transcript);
-    }
-  // IF THE STRING IS FOUND IN ANY ITERATION, THE FUNCTION IS RETURNED
-    else{
-      var objectToReturn = {
-        originalString: originalString,
-        stringFound: string,
-        times: times,
-        transcriptName: transcript.audioFile[0].name,
-        audioFile: transcript.audioFile
-      }
-      if(string === ''){
-        var originalStringArray = originalString.split(' ');
-        originalStringArray.splice(0,1);
-        var newString = originalStringArray.join(' ');
-        return getTimesOfStringAdvancedSpecificTranscript(newString, newString,transcript);
-      }
-      return objectToReturn;
-    }
-}
+
 // ----------------------------------------------------------------
 
+// ----------------------------------------------------------------
 
 function getTimesOfStringEvenMoreAdvanced(string){
   var stringArray = string.split(' ');
   if(!searchInTranscriptChunkedInOrderAsStrings(stringArray[0])){
+    wordsSearched.push('<span style="display:inline-block;" class="tooltip" ><span class="stringNotFound"><button style="cursor:pointer;color:red;">'+stringArray[0]+'</button></span> <span class="tooltiptext" id="tooltip-forWord-'+stringArray[0].split(' ').join('-')+'"> <button onclick="shitNigga()">TOOLTIP</button></span></span>')
     if (stringArray.length <= 1) {
       return;
     }
@@ -574,34 +503,7 @@ function getTimesOfStringEvenMoreAdvanced(string){
   return initialTimesFound;
 }
 // ----------------------------------------------------------------
-function getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript){
-  var stringArray = string.split(' ');
-  console.log(transcript.transcriptChunkedInOrderAsStrings);
-  if(!searchInSpecificTranscript(stringArray[0],transcript.transcriptChunkedInOrderAsStrings)){
-    if (stringArray.length <= 1) {
-      return;
-    }
-    stringArray.splice(0,1);
-    string = stringArray.join(' ');
-    return getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript);
-  }
-  if(!searchInSpecificTranscript(stringArray[stringArray.length-1],transcript.transcriptChunkedInOrderAsStrings)){
-    if (stringArray.length <= 1) {
-      return;
-    }
-    stringArray.splice(stringArray.length-1,1);
-    string = stringArray.join(' ');
-    return getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript);
-  }
-  if (string[0] === ' ') {
-    string = spliceSlice(string,0,1);
-  }
-  if (string[string.length-1] === ' ') {
-    string = spliceSlice(string,string.length-1,1);
-  }
-  var initialTimesFound = getTimesOfStringAdvancedSpecificTranscript(string,string,transcript);
-  return initialTimesFound;
-}
+
 // ----------------------------------------------------------------
 
 
@@ -609,6 +511,7 @@ var liHtmlArray = [];
 var multipleTimesIncrementer = 0;
 
 function getMultipleTimesOfString(string){
+
   if(string === ''){
     return;
   }
@@ -620,6 +523,8 @@ function getMultipleTimesOfString(string){
   arrayOfTimeObjects.push(object);
   var originalString = object.originalString;
   var stringFound = object.stringFound;
+
+
   var times = object.times;
 
   var buttonHtml = '';
@@ -628,7 +533,7 @@ function getMultipleTimesOfString(string){
 
   for (var i = 0; i < times.length; i++) {
     var currentLiHtmlLength = liHtmlArray.length;
-    buttonHtml.push('<span id="playCustomChunkSpan-'+currentLiHtmlLength+'-'+i+'"><button class="playChunk" id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'[<span class="timeChunk">'+times[i].startsAt +'-'+times[i].endAt+'</span>]'+'</button><button class="reduceChunk" onclick="reduceChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> - </button><button class="increaseChunk" onclick="increaseChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> + </button><button class="deleteChunk" onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button><button class="addToAudioLinkButton" onclick="addToAudioLinkArray('+times[i].startsAt + ',' + times[i].endAt+')">ADD</button></span>');
+    buttonHtml.push('<span class="playChunkOuterSpan" id="playCustomChunkSpan-'+currentLiHtmlLength+'-'+i+'"><button class="playChunk" id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'[<span class="timeChunk">'+times[i].startsAt +'-'+times[i].endAt+'</span>]'+'</button><button class="reduceChunk" onclick="reduceChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> - </button><button class="increaseChunk" onclick="increaseChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> + </button><button class="deleteChunk" onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button><button class="addToAudioLinkButton" onclick="addToAudioLinkAndChangeHtml('+times[i].startsAt + ',' + times[i].endAt+',1,'+'`'+stringFound+'`)'+'">ADD</button><button class="addToAudioLinkButton" onclick="increasePlaybackSpeed('+currentLiHtmlLength+','+i+')"> Speed Up </button></span>');
   }
   console.log(buttonHtml);
   liHtmlArray.push(buttonHtml);
@@ -646,57 +551,17 @@ function getMultipleTimesOfString(string){
 
 
 // ----------------------------------------------------------------
-// function getMultipleTimesOfStringSpecificTranscript(string,transcript){
-//   if(string === ''){
-//     return;
-//   }
-//   if (multipleTimesIncrementer === 0) {
-//     arrayOfTimeObjects = [];
-//   }
-//   multipleTimesIncrementer++;
-//   var object = getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript);
-//   arrayOfTimeObjects.push(object);
-//   var originalString = object.originalString;
-//   var stringFound = object.stringFound;
-//   var times = object.times;
-//   var fileName = transcript.audioFile[0].name
-//
-//   var buttonHtml = [];
-//
-//   for (var i = 0; i < times.length; i++) {
-//     buttonHtml.push('<button onclick="playChunkOfAudioWithSpecificAudioFileName('+times[i].startsAt + ',' + times[i].endAt+ ','+'"'+fileName+'"'+')">'+stringFound+'['+times[i].startsAt +'-'+times[i].endAt+']'+'</button><button> - </button><button> + </button><button> X </button>');
-//   }
-//   console.log(buttonHtml);
-//   liHtmlArray.push('<li>'+buttonHtml.join('')+'</li>');
-//
-//   var newStringToSearch = originalString.replace(stringFound,'');
-//   if(newStringToSearch[0] === ' '){
-//     newStringToSearch = spliceSlice(newStringToSearch,0,1);
-//   }
-//   if(newStringToSearch.length >= 1){
-//     return getMultipleTimesOfStringSpecificTranscript(newStringToSearch,transcript);
-//   }
-//   multipleTimesIncrementer = 0;
-//   return arrayOfTimeObjects;
-// }
-
-
-
-// ----------------------------------------------------------------
-
-function getMultipleTimesOfStringFromAllAudioFiles(string){
-  var arrayOfAllResults = [];
-  for (var i = 0; i < allTranscriptObjects.length; i++) {
-    arrayOfAllResults.push(getMultipleTimesOfStringSpecificTranscript(string,allTranscriptObjects[i]));
-  }
-  return arrayOfAllResults;
-}
-// ----------------------------------------------------------------
-
 
 function createCustomButtons(){
-  getMultipleTimesOfString(document.querySelector('#customWordButtonsTextarea').value);
+  var string = document.querySelector('#customWordButtonsTextarea').value;
+  var stringSeparatedBySentences = string.split('.');
+  var stringArray = string.split(' ');
 
+  for (var i = 0; i < stringSeparatedBySentences.length; i++) {
+    getMultipleTimesOfString(stringSeparatedBySentences[i]);
+  }
+
+  document.querySelector('#linked-content').innerHTML = wordsSearched.join(' ');
   document.querySelector('#customWordButtonsTextarea').value = '';
   var innerUlHtml = '';
   for (var i = 0; i < liHtmlArray.length; i++) {
@@ -706,6 +571,9 @@ function createCustomButtons(){
     }
     innerUlHtml += '</li>'
   }
+for(var i = 0; i < document.querySelectorAll('.stringFound').length; i++){
+  document.querySelectorAll('.stringFound')[i].nextSibling.nextSibling.innerHTML = liHtmlArray[i].join('<br>')
+}
   document.querySelector('#customWordButtons').innerHTML = innerUlHtml;
 }
 
@@ -719,6 +587,7 @@ function removeWithinCustomUlButtons(i,y){
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('removeWithinCustomUlButtons('+i+','+z+')', 'removeWithinCustomUlButtons('+i+','+(z-1)+')');
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('reduceChunkOfAudioBy10Miliseconds('+i+','+z+')', 'reduceChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('increaseChunkOfAudioBy10Miliseconds('+i+','+z+')', 'increaseChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('increasePlaybackSpeed('+i+','+z+')', 'increasePlaybackSpeed('+i+','+(z-1)+')');
     }
   }
   liHtmlArray[i].splice(y,1);
@@ -729,6 +598,7 @@ function removeWithinCustomUlButtons(i,y){
 }
 
 function reduceChunkOfAudioBy10Miliseconds(i,y){
+  var string = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).innerHTML.replace(/\[(.+?)\]/g, "");
   var times = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML.split('-');
 
   times[0] = Number(times[0]);
@@ -738,12 +608,11 @@ function reduceChunkOfAudioBy10Miliseconds(i,y){
 
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML = times[0].toFixed(2) + '-' + times[1].toFixed(2);
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).onclick = function(){playChunkOfAudio(times[0],times[1])}
-  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkArray(times[0],times[1]); }
-
-
-  addToAudioLinkArray
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkAndChangeHtml(times[0],times[1],1,string); }
 }
+
 function increaseChunkOfAudioBy10Miliseconds(i,y){
+  var string = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).innerHTML.replace(/\[(.+?)\]/g, "");
   var times = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML.split('-');
 
   times[0] = Number(times[0]);
@@ -753,13 +622,14 @@ function increaseChunkOfAudioBy10Miliseconds(i,y){
 
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML = times[0].toFixed(2) + '-' + times[1].toFixed(2);
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).onclick = function(){playChunkOfAudio(times[0],times[1])}
-  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkArray(times[0],times[1]); }
-
+  document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkAndChangeHtml(times[0],times[1],1,string); }
 }
 
+// function increasePlaybackSpeed(i,y){
+//
+// }
+
 document.querySelector('#customWordButtonsTextarea').value = '';
-
-
 
 
 
@@ -780,44 +650,6 @@ function playString(string){
   }
 }
 
-function playStringFromAudioFile(string,transcript){
-  var times = getTimesOfStringEvenMoreAdvancedSpecficTranscript(string,transcript).times;
-  console.log(times);
-
-  if(times.length > 0){
-    var randomNumber = Math.floor(Math.random() * times.length);
-    console.log(randomNumber)
-    if(times[randomNumber] && times[randomNumber].startsAt && times[randomNumber].endAt){
-        playAudioFile(transcript.audioFile);
-        playChunkOfAudio(times[randomNumber].startsAt,times[randomNumber].endAt);
-    }else{
-      console.log(times[randomNumber])
-    }
-  }else{
-    console.log(string+' not found');
-  }
-}
-
-function playChunkOfAudioWithSpecificAudioFileName(beginning,end,fileName){
-  clearInterval(singleWordInterval);
-  playAudioFileWithFileName(fileName);
-  document.querySelector('audio').currentTime = beginning;
-  document.querySelector('audio').play();
-
-  singleWordInterval = setInterval(function(){
-    // console.log(end);
-    // console.log(document.querySelector('audio').currentTime);
-    if(end < document.querySelector('audio').currentTime){
-      document.querySelector('audio').pause();
-      clearInterval(singleWordInterval);
-    }
-  },0.1);
-}
-
-
-
-
-
 function playStringTextInput(){
   playString(document.querySelector('#playStringTextInput').value);
   document.querySelector('#playStringTextInput').value = '';
@@ -835,15 +667,16 @@ function playStringTextInput(){
 
 
 
+
+
+
+
+
+
 var currentObjectToPushToDatabase = {};
 var currentTranscript;
 var titleOfTranscript;
 var allWordsArrayTotal = [];
-
-function arraysAreEqual(ary1,ary2){
-  return (ary1.join('') == ary2.join(''));
-}
-
 
 
 var allTranscriptObjects = [];
@@ -923,12 +756,17 @@ function createNewSoundBoard(){
 
     // replace all spaces ' ' and hyphens '-' with '' so that it avoids any confusion.
     if(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, '') !== titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, '')){
+      console.log(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, ''));
+      console.log(titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, ''));
       alert('Audio File Title Does Not Match');
       return;
     }
 
     document.getElementById('text').value = '';
     document.querySelector('#wordButtons').innerHTML =  '';
+    document.querySelector('#enterTranscriptDiv').style.display = 'none';
+    document.querySelector('#app-content').style.display = 'block';
+    document.querySelector('audio').pause();
     makeAllUlWordButtons();
 
     // CREATE OBJECT WITH ALL DATA
