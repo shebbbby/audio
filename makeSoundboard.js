@@ -477,7 +477,7 @@ function getTimesOfStringAdvanced(string, originalString){
 function getTimesOfStringEvenMoreAdvanced(string){
   var stringArray = string.split(' ');
   if(!searchInTranscriptChunkedInOrderAsStrings(stringArray[0])){
-    wordsSearched.push('<span style="display:inline-block;" class="tooltip" ><span class="stringNotFound"><button style="cursor:pointer;color:red;">'+stringArray[0]+'</button></span> <span class="tooltiptext" id="tooltip-forWord-'+stringArray[0].split(' ').join('-')+'"> <button onclick="shitNigga()">TOOLTIP</button></span></span>')
+    wordsSearched.push('<span style="display:inline-block;" class="tooltip" ><span class="stringNotFound"><button class="stringNotFoundButton-'+stringArray[0]+'" style="cursor:pointer;color:red;">'+stringArray[0]+'</button></span> <span class="tooltiptext" id="tooltip-forWord-'+stringArray[0].split(' ').join('-')+'"> <button onclick="shitNigga()">TOOLTIP</button></span></span>')
     if (stringArray.length <= 1) {
       return;
     }
@@ -574,7 +574,8 @@ function createCustomButtons(){
 for(var i = 0; i < document.querySelectorAll('.stringFound').length; i++){
   document.querySelectorAll('.stringFound')[i].nextSibling.nextSibling.innerHTML = liHtmlArray[i].join('<br>')
 }
-  document.querySelector('#customWordButtons').innerHTML = innerUlHtml;
+  // document.querySelector('#customWordButtons').innerHTML = innerUlHtml;
+  makeAllSynonymButtons();
 }
 
 

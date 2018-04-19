@@ -293,14 +293,14 @@ return attrs;
 // OTHERWISE, ONLY A PORTION OF THE WORD TIMESTAMPS WOULD BE EXTRACTED -------------------
 
 // Start at position 100 on page
-var scrollPosition = 100;
+var scrollPosition = $(window).scrollTop();
 
 // Need to start as null to clearInterval in the future
 var scrollInterval = null;
 
 scrollInterval = setInterval(function(){
   // every two seconds position will scroll down by 500.
-    scrollPosition += 600;
+    scrollPosition += 5000;
     //  300 value is arbitrary.
     window.scrollTo(300, scrollPosition);
 
@@ -309,7 +309,7 @@ scrollInterval = setInterval(function(){
 
     getAllWordsTimestamps();
 
-    console.log(copyOfAllWordsArray);
+    // console.log(copyOfAllWordsArray);
     // Since copyOfAllWordsArray will have many duplicates, remove all duplicates.
     uniqueCopyOfAllWordsArray = removeDuplicates(copyOfAllWordsArray,'word');
 
@@ -350,7 +350,7 @@ scrollInterval = setInterval(function(){
 
 
 
-},3000)
+},500)
 
 
 

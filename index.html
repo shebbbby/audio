@@ -16,16 +16,6 @@
       <br>
       <button onclick="createNewSoundBoard()">CREATE SOUNDBOARD</button>
 
-
-<!--
-      <div class="tooltip">
-          <button onclick="createNewSoundBoard()">CREATE SOUNDBOARD</button>
-          <span class="tooltiptext"> HAHAHAH: <button onclick="shitNigga()">TOOLTIP</button><button>LOG THIS</button></span>
-      </div> -->
-
-
-
-
       <hr>
     </div>
     <br>
@@ -53,7 +43,7 @@
   </div>
     <br>
     <div style="width:50%;margin-left:30px;" id="audio-link-content">
-      
+
     </div>
     <div style="width:50%;margin-left:30px;" id="linked-content">
 
@@ -72,7 +62,7 @@
     <textarea id="customWordButtonsTextarea" name="" id="" cols="30" rows="5">
 
     </textarea>
-    <button onclick="createCustomButtons();">Find All Words</button>
+    <button id="createCustomButtonsButton" onclick="createCustomButtons();">Find All Words</button>
     <br>
     <div style="width:50%;margin-left:30px;" id="linked-content">
 
@@ -103,6 +93,8 @@
     <!-- SCRIPTS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script src="audioHandler.js"></script>
+    <script src="datamuse.js"></script>
+    <script src="thesaurus-api.js"></script>
     <script src="service-functions.js"></script>
     <script src="data.js"></script>
     <script src="makeSoundboard.js"></script>
