@@ -2,40 +2,16 @@ function getCurrentTimePlayingInAudio(){
   return document.querySelector('audio').currentTime;
 }
 
-// NEED TO START AS null TO CLEAR INTERVAL IN FUTURE
-var singleWordInterval = null;
-
-function playSingleWord(wordObject){
-  clearInterval(singleWordInterval);
-  var startTime = wordObject.startsAt;
-  var endTime = wordObject.endAt;
-
-  // CAN SET OFFSET AMOUNT BEFORE entTime to make better timing
-
-  console.log(startTime, endTime);
-
-  document.querySelector('audio').currentTime = startTime;
-  document.querySelector('audio').play();
-
-  singleWordInterval = setInterval(function(){
-    // console.log(endTime);
-    // console.log(document.querySelector('audio').currentTime);
-    if(endTime < document.querySelector('audio').currentTime){
-      document.querySelector('audio').pause();
-      clearInterval(singleWordInterval);
-    }
-  },0.1);
-}
-
-function playSingleWordWithString(wordString){
-  for (var i = 0; i < allWordsArray.length; i++) {
-    if(allWordsArray[i].word === wordString){
-      playSingleWord(allWordsArray[i].objects[0]);
-    }
+function displayAllWordButtons(){
+  if(document.querySelector('#wordButtons').style.display === 'block'){
+    document.querySelector('#wordButtons').style.display = 'none';
+  }else{
+    document.querySelector('#wordButtons').style.display = 'block';
   }
 }
 
-
+// NEED TO START AS null TO CLEAR INTERVAL IN FUTURE
+var singleWordInterval = null;
 // To play two next to each other: playChunkOfAudio(5,10,1, function(){playChunkOfAudio(15,20)})
 function playChunkOfAudio(beginning,end,playbackRate,callback){
   clearInterval(singleWordInterval);
@@ -46,8 +22,6 @@ function playChunkOfAudio(beginning,end,playbackRate,callback){
   document.querySelector('audio').play();
 
   singleWordInterval = setInterval(function(){
-    // console.log(end);
-    // console.log(document.querySelector('audio').currentTime);
     if(end < document.querySelector('audio').currentTime){
       document.querySelector('audio').pause();
       // RESET PLAYBACK RATE TO NORMAL
@@ -63,7 +37,6 @@ function playChunkOfAudio(beginning,end,playbackRate,callback){
 // ------------------------------------------------------------------------------
 audioLinkArray = [];
 audioLinkArrayObjects = [];
-
 
 function addToAudioLinkArray(beginning,end, playbackRate){
   if (playbackRate) {
@@ -139,163 +112,6 @@ function emptyAudioLinkString(){
 
 // ------------------------------------------------------------------------------
 
-function getObjectsOfWordIfExists(word){
-  var arrayOfWord
-  for (var i = 0; i < allWordsArray.length; i++) {
-    if(word === allWordsArray[i].word){
-      return allWordsArray[i].objects;
-    }
-  }
-  return false;
-}
-
-function playIndividualWord(word, version){
-  var objects = getObjectsOfWordIfExists(word);
-
-  if(objects){
-    var objectsLength = objects.length;
-      if(version){
-        playChunkOfAudio(objects[version].startsAt,objects[version].endAt);
-      }else{
-        var randomNumber = Math.floor(Math.random() * objectsLength);
-        playChunkOfAudio(objects[randomNumber].startsAt,objects[randomNumber].endAt);
-      }
-  }
-}
-
-function checkIfNextWordIsCorrect(word1,word2){
-
-  var word1Objects = getObjectsOfWordIfExists(word1);
-  var word2bjects = getObjectsOfWordIfExists(word2);
-  for (var i = 0; i < word1Objects.length; i++) {
-    if (word1Objects[i].nextWord === word2) {
-      console.log('words go together');
-      return {
-        startsAt: word1Objects[i].startsAt,
-        endAt: word1Objects[i].nextWordObject.endAt
-      };
-    }
-  }
-  return false;
-}
-
-function getrandomTimingOfWord(word){
-  var wordObjects = getObjectsOfWordIfExists(word);
-  var randomNumber = Math.floor(Math.random() * wordObjects.length);
-    return {
-      startsAt: wordObjects[randomNumber].startsAt,
-      endAt: wordObjects[randomNumber].endAt
-  }
-}
-
-
-function checkIfPriorStringComesBefore(string, word){
-    if(currentTranscript.toLowerCase().indexOf(string + ' ' + word) !== -1){
-      return true;
-  }else{
-    return false;
-  }
-}
-
-
-function getMultipleRandomTimingOfWord(string){
-  var arrayOfWords = string.split(' ');
-  var arrayOfTimes = [];
-  for (var i = 0; i < arrayOfWords.length; i++) {
-    var checkIfTwoWordsGoTogether = checkIfNextWordIsCorrect(arrayOfWords[i],arrayOfWords[i+1]);
-    if(checkIfTwoWordsGoTogether){
-      arrayOfTimes.push({
-        word: arrayOfWords[i] + ' ' + arrayOfWords[i+1],
-        startsAt: checkIfTwoWordsGoTogether.startsAt,
-        endAt: checkIfTwoWordsGoTogether.endAt
-      })
-      arrayOfWords[i] = arrayOfWords[i] + ' ' + arrayOfWords[i+1];
-    }
-
-    else if(getObjectsOfWordIfExists(arrayOfWords[i])){
-      var times = getrandomTimingOfWord(arrayOfWords[i]);
-      arrayOfTimes.push({
-        word: arrayOfWords[i],
-        startsAt: times.startsAt,
-        endAt: times.endAt
-      })
-    }
-  }
-  return arrayOfTimes;
-}
-
-
-function checkIfStringIsSubstringOfRawTranscript(string){
-  if(rawTranscript.indexOf(string) !== -1){
-    var indices = getIndicesOf(string, rawTranscript);
-    return indices;
-  }else{
-    return false;
-  }
-}
-
-
-
-
-
-function reduceAudioBy1Millisecond(wordObject, i,y){
-  console.log(i,y);
-  if (wordObject.endAt - 0.01 > wordObject.startsAt) {
-    wordObject.endAt = wordObject.endAt - 0.01;
-    // CHANGE BUTTON TO REFLECT THE NEW AUDIO TIME
-    document.querySelector('#audioButton-'+i+'-'+y).innerHTML = allWordsArray[i].word+ '['+allWordsArray[i].objects[y].startsAt.toFixed(2)+'-'+allWordsArray[i].objects[y].endAt.toFixed(2)+']'
-  }
-}
-function addAudioBy1Millisecond(wordObject, i,y){
-  wordObject.endAt = wordObject.endAt + 0.01;
-  // CHANGE BUTTON TO REFLECT THE NEW AUDIO TIME
-  document.querySelector('#audioButton-'+i+'-'+y).innerHTML = allWordsArray[i].word+ '['+allWordsArray[i].objects[y].startsAt.toFixed(2)+'-'+allWordsArray[i].objects[y].endAt.toFixed(2)+']'
-}
-
-
-function makeAllUlWordButtons(){
-  var ulButtonsHTML = '';
-  for (var i = 0; i < allWordsArray.length; i++) {
-  var innerButtons = '';
-    for (var y = 0; y < allWordsArray[i].objects.length; y++) {
-      innerButtons += '<button id="audioButton-'+i+'-'+y+'" onclick="playSingleWord(allWordsArray['+i+'].objects['+y+'])">'+allWordsArray[i].word+ '['+allWordsArray[i].objects[y].startsAt.toFixed(2)+'-'+allWordsArray[i].objects[y].endAt.toFixed(2)+']</button><button id="reduce-'+i+'-'+y+'" onclick="reduceAudioBy1Millisecond('+'allWordsArray['+i+'].objects['+y+']'+','+i+','+y+')" >-</button><button id="add-'+i+'-'+y+'" onclick="addAudioBy1Millisecond('+'allWordsArray['+i+'].objects['+y+']'+','+i+','+y+')" >+</button>'
-    }
-  ulButtonsHTML += '<li>'+innerButtons+'</li>';
-  }
-  document.querySelector('#wordButtons').innerHTML = ulButtonsHTML;
-}
-
-
-
-
-
-
-
-// ----------------------------------------------------
-
-
-function getAllSubArraysForAllParagraphs(){
-  var subArrays = [];
-  for (var i = 0; i < currentObjectToPushToDatabase.paragraphTiming.length; i++) {
-    var splitArray = currentObjectToPushToDatabase.paragraphTiming[i].paragraph.split(' ');
-    subArrays.push(getAllSubArrays(splitArray));
-  }
-  return subArrays;
-}
-
-function getAllSubArraysForAllSentences(){
-  var subArrays = [];
-  var arrayOfAllSentences = rawTranscript.split('.');
-  for (var i = 0; i < arrayOfAllSentences.length; i++) {
-    var splitArray = arrayOfAllSentences[i].split(' ');
-    subArrays.push(getAllSubArrays(splitArray));
-  }
-  return subArrays;
-}
-
-
-
-
 function advancedObjectSplice(){
   var objectWordsInOrderArray = getAllWordObjectsInAlphabeticOrder();
   var overallArray = [];
@@ -331,17 +147,11 @@ function advancedObjectSpliceSTRING(){
     }
   }
 
-
   return overallArray;
 }
 
+// ----------------------------------------------------------------
 
-
-
-
-
-
-// ----------------------------------------------------
 function getAllSubArraysForChunkedTranscript(array){
   var subArrays = [];
   for (var i = 0; i < array.length; i++) {
@@ -369,7 +179,6 @@ function getAllWordObjectsInAlphabeticOrder(){
   }
   var rawTranscript = rawTranscript.join(' ');
   rawTranscriptArray = rawTranscript.split(' ');
-  document.querySelector('#transcript-text').innerHTML = transcriptTextHTML;
   return arrayOfAllIndividualObjects;
 }
 
@@ -398,8 +207,7 @@ function searchInMultiSubArray(array,string){
   return resultsArray;
 }
 
-
-// --------------------------------------
+// ----------------------------------------------------------------
 
 function searchInTranscriptChunkedInOrderAsStrings(string){
   var results = searchInMultiSubArray(transcriptChunkedInOrderAsStrings,string);
@@ -409,8 +217,6 @@ function searchInTranscriptChunkedInOrderAsStrings(string){
     return false;
   }
 }
-
-// ----------------------------------------------------------------
 
 // ----------------------------------------------------------------
 
@@ -431,7 +237,6 @@ function getTimesOfString(string){
   }
   return arrayOfTimesToReturn;
 }
-// ----------------------------------------------------------------
 // ----------------------------------------------------------------
 var wordsSearched = [];
 var stringsFoundArray = [];
@@ -472,8 +277,6 @@ function getTimesOfStringAdvanced(string, originalString){
 
 // ----------------------------------------------------------------
 
-// ----------------------------------------------------------------
-
 function getTimesOfStringEvenMoreAdvanced(string){
   var stringArray = string.split(' ');
   if(!searchInTranscriptChunkedInOrderAsStrings(stringArray[0])){
@@ -504,9 +307,6 @@ function getTimesOfStringEvenMoreAdvanced(string){
 }
 // ----------------------------------------------------------------
 
-// ----------------------------------------------------------------
-
-
 var liHtmlArray = [];
 var multipleTimesIncrementer = 0;
 
@@ -533,7 +333,7 @@ function getMultipleTimesOfString(string){
 
   for (var i = 0; i < times.length; i++) {
     var currentLiHtmlLength = liHtmlArray.length;
-    buttonHtml.push('<span class="playChunkOuterSpan" id="playCustomChunkSpan-'+currentLiHtmlLength+'-'+i+'"><button class="playChunk" id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'[<span class="timeChunk">'+times[i].startsAt +'-'+times[i].endAt+'</span>]'+'</button><button class="reduceChunk" onclick="reduceChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> - </button><button class="increaseChunk" onclick="increaseChunkOfAudioBy10Miliseconds('+currentLiHtmlLength+','+i+')"> + </button><button class="deleteChunk" onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button><button class="addToAudioLinkButton" onclick="addToAudioLinkAndChangeHtml('+times[i].startsAt + ',' + times[i].endAt+',1,'+'`'+stringFound+'`)'+'">ADD</button><button class="addToAudioLinkButton" onclick="increasePlaybackSpeed('+currentLiHtmlLength+','+i+')"> Speed Up </button></span>');
+    buttonHtml.push('<span class="playChunkOuterSpan" id="playCustomChunkSpan-'+currentLiHtmlLength+'-'+i+'"><button class="playChunk" id="playCustomChunk-'+currentLiHtmlLength+'-'+i+'" onclick="playChunkOfAudio('+times[i].startsAt + ',' + times[i].endAt+')">'+stringFound+'[<span class="timeChunk">'+times[i].startsAt +'-'+times[i].endAt+'</span>]'+'</button><button class="reduceChunk" onclick="reduceChunkOfAudioBy1Milisecond('+currentLiHtmlLength+','+i+')"> - </button><button class="increaseChunk" onclick="increaseChunkOfAudioBy1Milisecond('+currentLiHtmlLength+','+i+')"> + </button><button class="deleteChunk" onclick="removeWithinCustomUlButtons('+currentLiHtmlLength+','+i+')"> X </button><button class="addToAudioLinkButton" onclick="addToAudioLinkAndChangeHtml('+times[i].startsAt + ',' + times[i].endAt+',1,'+'`'+stringFound+'`)'+'">ADD</button><button class="addToAudioLinkButton" onclick="increasePlaybackSpeed('+currentLiHtmlLength+','+i+')"> Speed Up </button></span>');
   }
   console.log(buttonHtml);
   liHtmlArray.push(buttonHtml);
@@ -586,8 +386,8 @@ function removeWithinCustomUlButtons(i,y){
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('playCustomChunk-'+i+'-'+z+'','playCustomChunk-'+i+'-'+(z-1));
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('playCustomChunkSpan-'+i+'-'+z+'','playCustomChunkSpan-'+i+'-'+(z-1));
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('removeWithinCustomUlButtons('+i+','+z+')', 'removeWithinCustomUlButtons('+i+','+(z-1)+')');
-      liHtmlArray[i][z] = liHtmlArray[i][z].replace('reduceChunkOfAudioBy10Miliseconds('+i+','+z+')', 'reduceChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
-      liHtmlArray[i][z] = liHtmlArray[i][z].replace('increaseChunkOfAudioBy10Miliseconds('+i+','+z+')', 'increaseChunkOfAudioBy10Miliseconds('+i+','+(z-1)+')');
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('reduceChunkOfAudioBy1Milisecond('+i+','+z+')', 'reduceChunkOfAudioBy1Milisecond('+i+','+(z-1)+')');
+      liHtmlArray[i][z] = liHtmlArray[i][z].replace('increaseChunkOfAudioBy1Milisecond('+i+','+z+')', 'increaseChunkOfAudioBy1Milisecond('+i+','+(z-1)+')');
       liHtmlArray[i][z] = liHtmlArray[i][z].replace('increasePlaybackSpeed('+i+','+z+')', 'increasePlaybackSpeed('+i+','+(z-1)+')');
     }
   }
@@ -598,7 +398,7 @@ function removeWithinCustomUlButtons(i,y){
   createCustomButtons();
 }
 
-function reduceChunkOfAudioBy10Miliseconds(i,y){
+function reduceChunkOfAudioBy1Milisecond(i,y){
   var string = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).innerHTML.replace(/\[(.+?)\]/g, "");
   var times = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML.split('-');
 
@@ -612,7 +412,7 @@ function reduceChunkOfAudioBy10Miliseconds(i,y){
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkAndChangeHtml(times[0],times[1],1,string); }
 }
 
-function increaseChunkOfAudioBy10Miliseconds(i,y){
+function increaseChunkOfAudioBy1Milisecond(i,y){
   var string = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).innerHTML.replace(/\[(.+?)\]/g, "");
   var times = document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y+' .timeChunk').innerHTML.split('-');
 
@@ -625,10 +425,6 @@ function increaseChunkOfAudioBy10Miliseconds(i,y){
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > #playCustomChunk-'+i+'-'+y).onclick = function(){playChunkOfAudio(times[0],times[1])}
   document.querySelector('#playCustomChunkSpan-'+i+'-'+y+' > .addToAudioLinkButton').onclick = function(){ addToAudioLinkAndChangeHtml(times[0],times[1],1,string); }
 }
-
-// function increasePlaybackSpeed(i,y){
-//
-// }
 
 document.querySelector('#customWordButtonsTextarea').value = '';
 
@@ -657,30 +453,8 @@ function playStringTextInput(){
 }
 
 
+// -------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var currentObjectToPushToDatabase = {};
-var currentTranscript;
-var titleOfTranscript;
-var allWordsArrayTotal = [];
-
-
-var allTranscriptObjects = [];
 function getArrayOfTimeStamps(fullTranscript, endOfAudio){
   // Replace all line breaks with '!!!!' so that you can easily split into an array.
   var arrayOfLines = fullTranscript.replace( /\n/g, "!!!!" ).split( "!!!!" );
@@ -730,6 +504,12 @@ var rawTranscript;
 var transcriptChunkedInOrderAsObjects;
 var transcriptChunkedInOrderAsStrings;
 
+var currentTranscript;
+var titleOfTranscript;
+var allWordsArrayTotal = [];
+
+var allTranscriptObjects = [];
+
 
 
 function createNewSoundBoard(){
@@ -748,7 +528,6 @@ function createNewSoundBoard(){
     allWordsArray.splice(allWordsArray.length-1,1);
 
     currentTranscript = allWordsArray[allWordsArray.length-1];
-    document.querySelector('#transcript-text').innerHTML = currentTranscript;
     allWordsArray.splice(allWordsArray.length-1,1);
 
     titleOfTranscript = allWordsArray[allWordsArray.length-1];
@@ -756,26 +535,17 @@ function createNewSoundBoard(){
 
 
     // replace all spaces ' ' and hyphens '-' with '' so that it avoids any confusion.
-    if(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, '') !== titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, '')){
-      console.log(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, ''));
-      console.log(titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, ''));
+    if(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, '').replace(/'/g, '') !== titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, '').replace(/'/g, '')){
+      console.log(currentAudioFileBeingPlayed[0].name.replace(/\s+/g, "").replace(/-/g, '').replace(/'/g, ''));
+      console.log(titleOfTranscript.replace(/\s+/g, "-").replace(/-/g, '').replace(/'/g, ''));
       alert('Audio File Title Does Not Match');
       return;
     }
 
     document.getElementById('text').value = '';
-    document.querySelector('#wordButtons').innerHTML =  '';
     document.querySelector('#enterTranscriptDiv').style.display = 'none';
     document.querySelector('#app-content').style.display = 'block';
     document.querySelector('audio').pause();
-    makeAllUlWordButtons();
-
-    // CREATE OBJECT WITH ALL DATA
-    currentObjectToPushToDatabase.transcript = currentTranscript;
-    currentObjectToPushToDatabase.audioFile = currentAudioFileBeingPlayed;
-    currentObjectToPushToDatabase.originalTimingOfEachWord = allWordsArray;
-    currentObjectToPushToDatabase.paragraphTiming = getArrayOfTimeStamps(currentTranscript, endOfAudio);
-
 
     rawTranscript = currentTranscript.replace(/\(.*?\)/g, '');
 
@@ -792,22 +562,10 @@ function createNewSoundBoard(){
 
 
     rawTranscript = arrayOfLines.toString().replace(`×,Easily edit this transcript,Sonix has created the world's first AudioText Editor™—it stitches the audio to text and works like a word processor in your browser. Click on a word below and start typing. Hit enter to break apart who said what.,`,'').replace(/,/g, " ");
-    currentObjectToPushToDatabase.rawTranscript = rawTranscript;
-    document.querySelector('#transcript-text').innerHTML = rawTranscript;
     rawTranscriptArray = rawTranscript.split(' ');
-    currentObjectToPushToDatabase.rawTranscriptArray = rawTranscriptArray;
-
-    // var xxx = getAllWordObjectsInAlphabeticOrder()
-    // transcriptChunkedInOrderAsStrings = getAllSubArraysForAllSentences();
-    // transcriptChunkedInOrderAsStrings =  getAllSubArraysForChunked10Array();
-    // transcriptChunkedInOrderAsObjects = getAllSubArraysForChunkedTranscript(chunk(xxx,10));
 
     transcriptChunkedInOrderAsStrings = getAllSubArraysForChunkedTranscript(advancedObjectSpliceSTRING());
     transcriptChunkedInOrderAsObjects = getAllSubArraysForChunkedTranscript(advancedObjectSplice());
-    currentObjectToPushToDatabase.transcriptChunkedInOrderAsStrings = transcriptChunkedInOrderAsStrings;
-    currentObjectToPushToDatabase.transcriptChunkedInOrderAsObjects = transcriptChunkedInOrderAsObjects;
-
-
 
     allTranscriptObjects.push({
       transcriptChunkedInOrderAsStrings: transcriptChunkedInOrderAsStrings,

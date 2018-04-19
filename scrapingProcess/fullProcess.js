@@ -300,7 +300,7 @@ var scrollInterval = null;
 
 scrollInterval = setInterval(function(){
   // every two seconds position will scroll down by 500.
-    scrollPosition += 5000;
+    scrollPosition += 2000;
     //  300 value is arbitrary.
     window.scrollTo(300, scrollPosition);
 

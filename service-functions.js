@@ -30,6 +30,7 @@ function getIndicesOf(searchStr, str, caseSensitive) {
     return indices;
 }
 
+// Get chunk arrays within array with specified length
 function chunk (arr, len) {
   var chunks = [],
       i = 0,
