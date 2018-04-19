@@ -12,10 +12,15 @@ function displayAllWordButtons(){
 
 // NEED TO START AS null TO CLEAR INTERVAL IN FUTURE
 var singleWordInterval = null;
-// To play two next to each other: playChunkOfAudio(5,10,1, function(){playChunkOfAudio(15,20)})
-function playChunkOfAudio(beginning,end,playbackRate,callback){
+// To play two next to each other: playChunkOfAudio(5,10,1,0, function(){playChunkOfAudio(15,20)})
+
+function playChunkOfAudio(beginning,end,playbackRate,orderInAudioLink,callback){
   clearInterval(singleWordInterval);
   document.querySelector('audio').currentTime = beginning;
+
+  if (orderInAudioLink || orderInAudioLink === 0) {
+    document.querySelector('#audioLinkWord-'+orderInAudioLink).style.fontWeight ='bold';
+  }
   if(playbackRate){
     document.querySelector('audio').playbackRate = playbackRate;
   }
@@ -23,6 +28,9 @@ function playChunkOfAudio(beginning,end,playbackRate,callback){
 
   singleWordInterval = setInterval(function(){
     if(end < document.querySelector('audio').currentTime){
+      if (orderInAudioLink || orderInAudioLink === 0) {
+        document.querySelector('#audioLinkWord-'+orderInAudioLink).style.fontWeight ='normal';
+      }
       document.querySelector('audio').pause();
       // RESET PLAYBACK RATE TO NORMAL
       document.querySelector('audio').playbackRate = 1;
@@ -34,45 +42,79 @@ function playChunkOfAudio(beginning,end,playbackRate,callback){
   },0.1);
 }
 
+
 // ------------------------------------------------------------------------------
-audioLinkArray = [];
 audioLinkArrayObjects = [];
 
-function addToAudioLinkArray(beginning,end, playbackRate){
+function createStringForAudioLinkEval(beginning,end, playbackRate,orderInAudioLink){
   if (playbackRate) {
     var playback = ','+ playbackRate;
   }else{
     var playback = '';
   }
-  stringToAdd = 'playChunkOfAudio('+beginning+','+end + playback + ',function(){console.log("FINISHED")})';
-  console.log(stringToAdd);
-  audioLinkArray.push(stringToAdd);
+  if (orderInAudioLink || orderInAudioLink === 0) {
+    var orderInAudioLink = ','+ orderInAudioLink;
+  }else{
+    var orderInAudioLink = '';
+  }
+
+
+  stringToAdd = 'playChunkOfAudio('+beginning+','+end + playback + orderInAudioLink + ',function(){console.log("FINISHED")})';
 
   return stringToAdd;
 }
 
+function audioLinkObject(beginning, end, playbackRate, stringFunction,string) {
+    this.objectNumber = audioLinkArrayObjects.length;
+    this.beginning = beginning;
+    this.end = end;
+    this.playbackRate = playbackRate;
+    this.stringFunction = stringFunction;
+    this.string = string;
+    this.updateStringFunction = function() {this.stringFunction = createStringForAudioLinkEval(this.beginning,this.end, this.playbackRate,this.objectNumber);linkAudioLinkArray();this.setHtml();};
+    this.increasePlaybackRate = function() {this.playbackRate = this.playbackRate  += .1;this.updateStringFunction();};
+    this.decreasePlaybackRate = function() {this.playbackRate = this.playbackRate  -= .1;this.updateStringFunction();};
+    this.setPlaybackRate = function(playbackRate) {this.playbackRate = playbackRate;this.updateStringFunction();};
+    this.increaseTime = function() {this.end = this.end  += .01;this.updateStringFunction();};
+    this.decreaseTime = function() {this.end = this.end  -= .01;this.updateStringFunction();};
+    this.setEnd = function(end) {this.end = end;};
+    this.increaseTimeBeginning = function() {this.beginning = this.beginning  += .01;this.updateStringFunction();};
+    this.decreaseTimeBeginning = function() {this.beginning = this.beginning  -= .01;this.updateStringFunction();};
+    this.setBeginning = function(beginning) {this.beginning = beginning;this.updateStringFunction();};
+    this.html = '<span id="audioLinkWord-'+this.objectNumber+'" class="tooltip" style="cursor:pointer;">' + '<span style="margin-right: 5px;" onclick='+this.stringFunction+'>' + this.string + '</span>' + '<span class="tooltiptext" style="width:200px;"> <span>'+this.string+'</span> <br> <span>'+this.beginning+'-'+this.end+'</span> <br> <span>Playback Rate:'+this.playbackRate+'</span> <hr> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].decreasePlaybackRate()"> - Playback  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].increasePlaybackRate()"> + Playback  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].decreaseTime()"> - EndTime  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].increaseTime()"> + EndTime  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].decreaseTimeBeginning()"> - begTime  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].increaseTimeBeginning()"> + begTime  </button> </span> </span>';
+    this.setHtml = function(){
+      this.html = '<span id="audioLinkWord-'+this.objectNumber+'" class="tooltip" style="cursor:pointer;">' + '<span style="margin-right: 5px;" onclick='+this.stringFunction+'>' + this.string + '</span>' + '<span class="tooltiptext" style="width:200px;"> <span>'+this.string+'</span> <br> <span>'+this.beginning+'-'+this.end+'</span> <br> <span>Playback Rate:'+this.playbackRate+'</span> <hr> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].decreasePlaybackRate()"> - Playback  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].increasePlaybackRate()"> + Playback  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].decreaseTime()"> - EndTime  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].increaseTime()"> + EndTime  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].decreaseTimeBeginning()"> - begTime  </button> <button onclick="audioLinkArrayObjects['+this.objectNumber+'].increaseTimeBeginning()"> + begTime  </button> </span> </span>';
+      resetAudioLinkHtml();
+    }
+}
 
-function addToAudioLinkAndChangeHtml(beginning,end, playbackRate,string){
-  var stringFunction = addToAudioLinkArray(beginning,end, playbackRate);
-  audioLinkArrayObjects.push({
-    beginning: beginning,
-    end:end,
-    playbackRate:playbackRate,
-    stringFunction: stringFunction,
-    string:string
-  });
+function resetAudioLinkHtml(){
   var innerHTMLText = '';
   for(var i = 0; i < audioLinkArrayObjects.length; i++){
-    innerHTMLText += '<span style="cursor:pointer;" onclick='+audioLinkArrayObjects[i].stringFunction+'>' + audioLinkArrayObjects[i].string + ' </span>';
+    innerHTMLText += audioLinkArrayObjects[i].html;
   }
   document.querySelector('#audio-link-content').innerHTML = innerHTMLText;
+  makeAllSynonymButtons();
+}
+
+function addToAudioLinkAndChangeHtml(beginning,end, playbackRate,string){
+  var stringFunction = createStringForAudioLinkEval(beginning,end, playbackRate, audioLinkArrayObjects.length);
+  var newAudioLinkObject = new audioLinkObject(beginning, end,playbackRate,stringFunction,string);
+  console.log(newAudioLinkObject);
+  audioLinkArrayObjects.push(newAudioLinkObject);
+  resetAudioLinkHtml();
 }
 
 
 function linkAudioLinkArray(){
+  var newAudioLinkArrayOnlyStringFunctions = [];
+  for (var i = 0; i < audioLinkArrayObjects.length; i++) {
+    newAudioLinkArrayOnlyStringFunctions.push(audioLinkArrayObjects[i].stringFunction);
+  }
   // CREATE CLONE OF AUDIOLINKARRAY
-  var audioLinkArray2 = JSON.parse(JSON.stringify(audioLinkArray));
-  for (var i = 0; i < audioLinkArray.length; i++) {
+  var audioLinkArray2 = JSON.parse(JSON.stringify(newAudioLinkArrayOnlyStringFunctions));
+  console.log(audioLinkArray2);
+  for (var i = 0; i < audioLinkArrayObjects.length; i++) {
     if (audioLinkArray2[i + 1]) {
       audioLinkArray2[i] = audioLinkArray2[i].replace('console.log("FINISHED")',audioLinkArray2[i+1]);
       audioLinkArray2.splice(i+1,1);
@@ -99,7 +141,7 @@ function getRandomAudioLinkFromCurrentFound(){
 }
 
 function playAudioLinkString(){
-  if (audioLinkArray.length > 0) {
+  if (audioLinkArrayObjects.length > 0) {
     eval(linkAudioLinkArray());
   }
 }
@@ -374,8 +416,6 @@ function createCustomButtons(){
 for(var i = 0; i < document.querySelectorAll('.stringFound').length; i++){
   document.querySelectorAll('.stringFound')[i].nextSibling.nextSibling.innerHTML = liHtmlArray[i].join('<br>')
 }
-  // document.querySelector('#customWordButtons').innerHTML = innerUlHtml;
-  makeAllSynonymButtons();
 }
 
 
