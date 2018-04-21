@@ -3,9 +3,11 @@ function searchWordInThesaurus(word,number) {
 		url: 'https://www.dictionaryapi.com/api/v1/references/thesaurus/xml/' + word + '?key=86ea0d7a-789f-4a53-ba9d-1303f3cbf6ae',
 		method: "GET",
 		success: function (response) {
+			console.log(response);
       var wordArray = [];
 			var definitionVersionNumbers = response.querySelectorAll('sens').length;
 			console.log(definitionVersionNumbers)
+
 			for (var i = 0; i < definitionVersionNumbers; i++) {
 				var word = response.querySelector('hw').innerHTML;
 				var partOfSpeech = response.querySelector('fl').innerHTML;
@@ -40,7 +42,8 @@ function searchWordInThesaurus(word,number) {
 					var synonymsArray = wordArray[i].synonyms;
 					var htmlSpanButtons = '';
 					for (var y = 0; y < synonymsArray.length; y++) {
-						htmlSpanButtons += '<button onclick=enterStringIntoTextarea("'+synonymsArray[y].replace(' ','')+'")>'+synonymsArray[y]+'</button>'
+						var synonym = synonymsArray[y].replace(' ','').replace(/\((.+?)\)/g, "").replace(/\[(.+?)\]/g, "");
+						htmlSpanButtons += '<button onclick=enterStringIntoTextarea("'+synonym+'")>'+synonym+'</button>'
 					}
 					allHtml +='<span> Synonyms:' + htmlSpanButtons + '</span><hr>'
 				}
